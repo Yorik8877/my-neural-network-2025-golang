@@ -1,4 +1,11 @@
-package main
+package ai
+
+import (
+	"encoding/csv"
+	"io"
+	"os"
+	"strconv"
+)
 
 type NeuralNetwork struct {
 	// Транспонированная матрица весов скрытых синапсов
@@ -22,12 +29,12 @@ type NeuralNetwork struct {
 	a float64
 
 	dataSet [][]float64
-	answers []float64
+	Answers []float64
 
 	// Дельты скрытых синапсов
-	previousHiddenWeightDeltas [][]float64
+	PreviousHiddenWeightDeltas [][]float64
 	// Дельты выходных синапсов
-	previousOutputWeightDeltas []float64
+	PreviousOutputWeightDeltas []float64
 }
 
 func NewNeuralNetwork(
@@ -47,6 +54,38 @@ func NewNeuralNetwork(
 }
 
 func (ai *NeuralNetwork) ReadFromCSV(filePath string) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	reader.Comma = '\t'
+
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return err
+		}
+
+		var buffer []float64
+		for _, value := range record {
+			parsedValue, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				panic(err)
+			}
+
+			buffer = append(buffer, parsedValue)
+		}
+
+		ai.dataSet = append(ai.dataSet, buffer)
+	}
+
 	return nil
 }
 
@@ -64,16 +103,17 @@ func (ai *NeuralNetwork) TrainAI() error {
 		outputValue := ai.calcOutput(hiddenOutputsValues)
 
 		// Запись ответа для подсчёта MSE
-		ai.answers = append(ai.answers, outputValue)
+		ai.Answers = append(ai.Answers, outputValue)
 		// Подсчёт MSE
 		ai.MSE = ai.calcMSE(idealValue)
 
 		// Рассчёт градиентов
 		hiddenGradients, outputGradients := ai.calcGradients(trainSet, idealValue, outputValue)
+
 		// Рассчёт дельт
 		hiddenDeltas, outputDeltas := ai.calcDeltas(hiddenGradients, outputGradients)
-		ai.previousHiddenWeightDeltas = hiddenDeltas
-		ai.previousOutputWeightDeltas = outputDeltas
+		ai.PreviousHiddenWeightDeltas = hiddenDeltas
+		ai.PreviousOutputWeightDeltas = outputDeltas
 
 		// Рассчёт новых весов
 		newHiddenWeight, newOutputWeights := ai.calcNewWeights(hiddenDeltas, outputDeltas)
@@ -146,8 +186,8 @@ func (ai *NeuralNetwork) calcDeltas(hiddenGradients [][]float64, outputGradients
 		var buffer []float64
 		for idx, gradient := range lineOfGradients {
 			var previousHiddenDelta = float64(0)
-			if ai.previousHiddenWeightDeltas != nil && ai.previousHiddenWeightDeltas[lineOfGradientsIdx] != nil {
-				previousHiddenDelta = ai.previousHiddenWeightDeltas[lineOfGradientsIdx][idx]
+			if ai.PreviousHiddenWeightDeltas != nil && ai.PreviousHiddenWeightDeltas[lineOfGradientsIdx] != nil {
+				previousHiddenDelta = ai.PreviousHiddenWeightDeltas[lineOfGradientsIdx][idx]
 
 			}
 
@@ -161,8 +201,8 @@ func (ai *NeuralNetwork) calcDeltas(hiddenGradients [][]float64, outputGradients
 	var outputDeltas []float64
 	for idx, gradient := range outputGradients {
 		var previousOutputDelta = float64(0)
-		if ai.previousOutputWeightDeltas != nil {
-			previousOutputDelta = ai.previousOutputWeightDeltas[idx]
+		if ai.PreviousOutputWeightDeltas != nil {
+			previousOutputDelta = ai.PreviousOutputWeightDeltas[idx]
 		}
 
 		delta := ai.E*gradient + ai.a*previousOutputDelta
@@ -193,9 +233,9 @@ func (ai *NeuralNetwork) calcNewWeights(hiddenDeltas [][]float64, outputDeltas [
 
 func (ai *NeuralNetwork) calcMSE(ideal float64) float64 {
 	mse := float64(0)
-	for _, answer := range ai.answers {
+	for _, answer := range ai.Answers {
 		mse += (ideal - answer) * (ideal - answer)
 	}
 
-	return mse / float64(len(ai.answers))
+	return mse / float64(len(ai.Answers))
 }
