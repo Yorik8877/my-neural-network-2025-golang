@@ -17,11 +17,11 @@ func main() {
 	myAi := ai.NewNeuralNetwork(
 		hiddenWeights, outputWeights,
 		sigmoidFunc, antiSigmoidFunc,
-		calcDiscriminantFunction, 10000, 0.7, 0.3,
+		calcDiscriminantFunction,
 	)
 
 	myAi.ReadFromCSV("test_data.csv")
-	myAi.TrainAI()
+	// myAi.TrainAI()
 }
 
 func calcDiscriminantFunction(numbersSet []float64) float64 {
