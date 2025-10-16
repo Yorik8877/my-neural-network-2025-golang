@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"math"
 	"my-neural-network-2025-golang/ai"
 )
@@ -20,8 +22,18 @@ func main() {
 		calcDiscriminantFunction,
 	)
 
-	myAi.ReadFromCSV("test_data.csv")
-	// myAi.TrainAI()
+	err := myAi.ReadFromCSV("test_data.csv")
+	if err != nil {
+		panic(err)
+	}
+
+	myAi.TrainSingleEra()
+	answerByte, err := json.MarshalIndent(myAi, "", "    ")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(answerByte))
 }
 
 func calcDiscriminantFunction(numbersSet []float64) float64 {
