@@ -7,10 +7,10 @@ type NeuralNetwork struct {
 	OutputWeights []float64 `json:"output_weights"`
 
 	// Функции активации
-	ActivationFunction func(float64) float64 `json:"-"`
+	ActivationFunction func(float64) (float64, error) `json:"-"`
 	// Конечно-разностный аналог функции активации для обратного прохода
-	DeactivationFunction func(float64) float64   `json:"-"`
-	calcIdealFunction    func([]float64) float64 `json:"-"`
+	DeactivationFunction func(float64) (float64, error)   `json:"-"`
+	calcIdealFunction    func([]float64) (float64, error) `json:"-"`
 
 	RequestedEra uint `json:"requested_era"`
 
@@ -32,8 +32,8 @@ type NeuralNetwork struct {
 
 func NewNeuralNetwork(
 	hiddenWeights [][]float64, outputWeights []float64,
-	activationFunction, deactivationFunction func(float64) float64,
-	calcIdealFunction func([]float64) float64,
+	activationFunction, deactivationFunction func(float64) (float64, error),
+	calcIdealFunction func([]float64) (float64, error),
 ) *NeuralNetwork {
 	baseLength := len(hiddenWeights)
 	for _, weights := range hiddenWeights {

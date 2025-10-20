@@ -21,7 +21,11 @@ func (ai *NeuralNetwork) calcNeuronsInput(trainSet []float64) []float64 {
 func (ai *NeuralNetwork) calcNeuronsOutput(neuronInputs []float64) []float64 {
 	var result []float64
 	for _, input := range neuronInputs {
-		result = append(result, ai.ActivationFunction(input))
+		activatedValue, err := ai.ActivationFunction(input)
+		if err != nil {
+			panic(err)
+		}
+		result = append(result, activatedValue)
 	}
 
 	return result

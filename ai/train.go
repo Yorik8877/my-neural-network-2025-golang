@@ -10,20 +10,34 @@ func (ai *NeuralNetwork) TrainSingleEra() {
 		// Считаем выходной нейрон
 		actualOutput := ai.calcOutput(neuronOutputs)
 		// Считаем идеальное значение
-		idealOutput := ai.calcIdealFunction(trainSet)
+		idealOutput, err := ai.calcIdealFunction(trainSet)
+		if err != nil {
+			panic(err)
+		}
 		ai.Answers = append(ai.Answers, actualOutput)
 
 		// Считаем ошибку
 		ai.MSE = ai.calcMSE(idealOutput)
 
 		// Начинаем обратный проход
-		dO := (idealOutput - actualOutput) * ai.DeactivationFunction(actualOutput)
+		deactivatedActualOutput, err := ai.DeactivationFunction(actualOutput)
+		if err != nil {
+			panic(err)
+		}
+		dO := (idealOutput - actualOutput) * deactivatedActualOutput
 		dHs := make([]float64, len(neuronOutputs))
 
 		// Градиенты выходных синапсов
 		outputGradients := make([]float64, len(neuronOutputs))
 		for i, neuronOutput := range neuronOutputs {
-			dHs[i] = dO * ai.OutputWeights[i] * ai.DeactivationFunction(neuronOutput)
+			if err != nil {
+				panic(err)
+			}
+			deactivatedNeuronOutput, err := ai.DeactivationFunction(neuronOutput)
+			if err != nil {
+				panic(err)
+			}
+			dHs[i] = dO * ai.OutputWeights[i] * deactivatedNeuronOutput
 			outputGradients[i] = dO * neuronOutput
 		}
 
@@ -52,7 +66,7 @@ func (ai *NeuralNetwork) TrainSingleEra() {
 			}
 		}
 
-		break
+		// break
 	}
 }
 
